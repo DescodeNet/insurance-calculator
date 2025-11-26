@@ -717,7 +717,7 @@
 
                 <div class="method-selector">
                     <label for="defaultMethod">기본 정산 방안 선택</label>
-                    <select id="defaultMethod" onchange="updateSummary()">
+                    <select id="defaultMethod" onchange="onMethodChange()">
                         <option value="1">방안 1: 선지급금 전액 지급</option>
                         <option value="2">방안 2: 총보수의 50% 지급</option>
                         <option value="3">방안 3: 보험료의 2배수 지급</option>
@@ -1226,8 +1226,11 @@
             document.getElementById('settlementAmount').textContent = formatNumber(settlementAmount) + ' 원';
             document.getElementById('totalCount').textContent = contracts.length + ' 건';
             document.getElementById('grandTotal').textContent = formatNumber(totalSettlement) + ' 원';
+        }
 
-            // 결과 테이블 하이라이트 업데이트
+        // 정산 방안 변경 시 (하이라이트 업데이트 포함)
+        function onMethodChange() {
+            updateSummary();
             renderContracts();
         }
 
