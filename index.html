@@ -121,6 +121,29 @@
             color: #2a5298;
         }
 
+        .summary-divider {
+            border: none;
+            border-top: 2px dashed #ddd;
+            margin: 20px 0;
+        }
+
+        .summary-highlight {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e3f0ff 100%);
+            border: 1px solid #5c9ce6;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .summary-highlight h3 {
+            color: #1e5aa8;
+            border-bottom-color: #1e5aa8;
+        }
+
+        .summary-highlight .summary-row .value {
+            color: #1e5aa8;
+        }
+
         .summary-note {
             margin-top: 20px;
             padding: 15px;
@@ -715,35 +738,33 @@
                     </div>
                 </div>
 
-                <div class="method-selector">
-                    <label for="defaultMethod">기본 정산 방안 선택</label>
-                    <select id="defaultMethod" onchange="onMethodChange()">
-                        <option value="1">방안 1: 선지급금 전액 지급</option>
-                        <option value="2">방안 2: 총보수의 50% 지급</option>
-                        <option value="3">방안 3: 보험료의 2배수 지급</option>
-                    </select>
-                </div>
-
-                <div class="summary-total">
-                    <div class="summary-row">
-                        <span class="label">수익정산금액</span>
-                        <span class="value" id="settlementAmount">0 원</span>
-                    </div>
-                    <div class="summary-row">
-                        <span class="label">총 건수</span>
-                        <span class="value" id="totalCount">0 건</span>
-                    </div>
-                    <div class="summary-row">
-                        <span class="label">정산 총액</span>
-                        <span class="value" id="grandTotal">0 원</span>
+                <div class="summary-highlight">
+                    <div class="summary-group" style="margin-bottom: 0;">
+                        <h3>예상 지급액</h3>
+                        <div class="summary-row">
+                            <span class="label">건당 수익 정산금</span>
+                            <span class="value" id="settlementAmount">0 원</span>
+                        </div>
+                        <div class="summary-row">
+                            <span class="label">총 건수</span>
+                            <span class="value">
+                                <input type="number" id="totalCount" value="0" min="0" style="width: 60px; padding: 4px 8px; border: 1px solid #5c9ce6; border-radius: 4px; text-align: right; font-weight: 600; color: #1e5aa8;" oninput="updateGrandTotal()"> 건
+                            </span>
+                        </div>
+                        <div class="summary-row" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #5c9ce6;">
+                            <span class="label" style="font-weight: 600;">정산 총액</span>
+                            <span class="value" style="font-size: 1.1rem; font-weight: 700;" id="grandTotal">0 원</span>
+                        </div>
                     </div>
                 </div>
 
                 <div class="summary-note">
                     <h4>[참고]</h4>
-                    <p>메트라이프 수수료: 선지급률 40~50%</p>
-                    <p>손해보험 수수료: 선지급률 50~60%</p>
-                    <p style="margin-top: 8px;">* 정산 방안 1~3번 모두 수익 배분 5:5 구조 가능</p>
+                    <p>메트라이프 수수료 : 선지급률 40~50%</p>
+                    <p>손해보험 수수료 : 선지급률 50~60%</p>
+                    <p style="margin-top: 8px;"><strong>&lt;총 보수 계산&gt;</strong></p>
+                    <p>메트라이프 = 보험료 x 4배수</p>
+                    <p>손해보험 = 보험료 x 6배수</p>
                 </div>
             </div>
         </div>
@@ -1054,22 +1075,47 @@
         function updateContract(id, field, value) {
             const contract = contracts.find(c => c.id === id);
             if (contract) {
-                if (field === 'label' || field === 'insuranceType') {
+                if (field === 'label') {
                     contract[field] = value;
+                } else if (field === 'insuranceType') {
+                    contract[field] = value;
+                    // 보험 유형 변경 시 재계산
+                    calculateCommissions(contract);
+                    updateAutoCalcDisplay(id, contract);
+                } else if (field === 'monthlyPremium') {
+                    contract[field] = parseNumber(value);
+                    // 월 보험료 입력 시 자동 계산
+                    calculateCommissions(contract);
+                    updateAutoCalcDisplay(id, contract);
                 } else {
                     contract[field] = parseNumber(value);
                 }
-                renderContractResult(id);
                 updateSummary();
             }
         }
 
-        function calculateSettlement(contract) {
-            return {
-                method1: contract.advancePayment,
-                method2: Math.round(contract.totalCommission * 0.5),
-                method3: contract.monthlyPremium * 2
-            };
+        function calculateCommissions(contract) {
+            const monthlyPremium = contract.monthlyPremium;
+            if (contract.insuranceType === 'metlife') {
+                // 메트라이프: 총 수수료 = 월 보험료 * 4, 선지급률 50%
+                contract.totalCommission = monthlyPremium * 4;
+                contract.advancePayment = Math.round(contract.totalCommission * 0.5);
+            } else {
+                // 손해보험: 총 수수료 = 월 보험료 * 6, 선지급률 50%
+                contract.totalCommission = monthlyPremium * 6;
+                contract.advancePayment = Math.round(contract.totalCommission * 0.5);
+            }
+        }
+
+        function updateAutoCalcDisplay(id, contract) {
+            const totalCommEl = document.getElementById(`total-comm-${id}`);
+            const advancePayEl = document.getElementById(`advance-pay-${id}`);
+            if (totalCommEl) {
+                totalCommEl.textContent = formatNumber(contract.totalCommission) + ' 원';
+            }
+            if (advancePayEl) {
+                advancePayEl.textContent = formatNumber(contract.advancePayment) + ' 원';
+            }
         }
 
         function renderContracts() {
@@ -1086,9 +1132,6 @@
             }
 
             list.innerHTML = contracts.map((contract, index) => {
-                const result = calculateSettlement(contract);
-                const selectedMethod = document.getElementById('defaultMethod').value;
-                
                 return `
                     <div class="contract-card" id="contract-${contract.id}">
                         <div class="contract-header">
@@ -1111,40 +1154,21 @@
                                         <option value="nonlife" ${contract.insuranceType === 'nonlife' ? 'selected' : ''}>손해보험</option>
                                     </select>
                                 </div>
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label>월 보험료 (원)</label>
-                                        <input type="text" placeholder="0" value="${contract.monthlyPremium ? formatNumber(contract.monthlyPremium) : ''}"
-                                            oninput="this.value = formatNumber(parseNumber(this.value)); updateContract(${contract.id}, 'monthlyPremium', this.value)">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>총 수수료 (원)</label>
-                                        <input type="text" placeholder="0" value="${contract.totalCommission ? formatNumber(contract.totalCommission) : ''}"
-                                            oninput="this.value = formatNumber(parseNumber(this.value)); updateContract(${contract.id}, 'totalCommission', this.value)">
-                                    </div>
-                                </div>
                                 <div class="form-group">
-                                    <label>선지급금 (원)</label>
-                                    <input type="text" placeholder="0" value="${contract.advancePayment ? formatNumber(contract.advancePayment) : ''}"
-                                        oninput="this.value = formatNumber(parseNumber(this.value)); updateContract(${contract.id}, 'advancePayment', this.value)">
+                                    <label>월 보험료 (원)</label>
+                                    <input type="text" placeholder="0" value="${contract.monthlyPremium ? formatNumber(contract.monthlyPremium) : ''}"
+                                        oninput="this.value = formatNumber(parseNumber(this.value)); updateContract(${contract.id}, 'monthlyPremium', this.value)">
                                 </div>
-                            </div>
-                            <div class="result-section">
-                                <h4>정산 방안별 지급액</h4>
-                                <table class="result-table" id="result-table-${contract.id}">
-                                    <tr class="${selectedMethod === '1' ? 'selected' : ''}">
-                                        <th>1. 선지급금 전액 지급</th>
-                                        <td>${formatNumber(result.method1)} 원</td>
-                                    </tr>
-                                    <tr class="${selectedMethod === '2' ? 'selected' : ''}">
-                                        <th>2. 총보수의 50% 지급</th>
-                                        <td>${formatNumber(result.method2)} 원</td>
-                                    </tr>
-                                    <tr class="${selectedMethod === '3' ? 'selected' : ''}">
-                                        <th>3. 보험료의 2배수 지급</th>
-                                        <td>${formatNumber(result.method3)} 원</td>
-                                    </tr>
-                                </table>
+                                <div class="form-row" style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd;">
+                                    <div class="form-group">
+                                        <label style="color: #888;">총 수수료 (자동계산)</label>
+                                        <div id="total-comm-${contract.id}" style="padding: 10px 12px; background: #f5f5f5; border-radius: 6px; font-weight: 600; color: #2a5298;">${formatNumber(contract.totalCommission)} 원</div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label style="color: #888;">선지급금 (자동계산)</label>
+                                        <div id="advance-pay-${contract.id}" style="padding: 10px 12px; background: #f5f5f5; border-radius: 6px; font-weight: 600; color: #2a5298;">${formatNumber(contract.advancePayment)} 원</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1152,68 +1176,32 @@
             }).join('');
         }
 
-        function renderContractResult(id) {
-            const contract = contracts.find(c => c.id === id);
-            if (!contract) return;
-
-            const result = calculateSettlement(contract);
-            const selectedMethod = document.getElementById('defaultMethod').value;
-            const table = document.getElementById(`result-table-${id}`);
-            
-            if (table) {
-                table.innerHTML = `
-                    <tr class="${selectedMethod === '1' ? 'selected' : ''}">
-                        <th>1. 선지급금 전액 지급</th>
-                        <td>${formatNumber(result.method1)} 원</td>
-                    </tr>
-                    <tr class="${selectedMethod === '2' ? 'selected' : ''}">
-                        <th>2. 총보수의 50% 지급</th>
-                        <td>${formatNumber(result.method2)} 원</td>
-                    </tr>
-                    <tr class="${selectedMethod === '3' ? 'selected' : ''}">
-                        <th>3. 보험료의 2배수 지급</th>
-                        <td>${formatNumber(result.method3)} 원</td>
-                    </tr>
-                `;
-            }
-        }
-
         function updateSummary() {
             const metlifeContracts = contracts.filter(c => c.insuranceType === 'metlife');
             const nonlifeContracts = contracts.filter(c => c.insuranceType === 'nonlife');
-            const selectedMethod = document.getElementById('defaultMethod').value;
 
-            // 월평균보험료
-            const avgMetlife = metlifeContracts.length > 0 
-                ? Math.round(metlifeContracts.reduce((sum, c) => sum + c.monthlyPremium, 0) / metlifeContracts.length)
+            // 합산보험료
+            const sumMetlife = metlifeContracts.reduce((sum, c) => sum + c.monthlyPremium, 0);
+            const sumNonlife = nonlifeContracts.reduce((sum, c) => sum + c.monthlyPremium, 0);
+            const sumTotal = sumMetlife + sumNonlife;
+
+            // 월평균보험료 (메트라이프, 손해보험 각각 평균, 합계는 총합)
+            const avgMetlife = metlifeContracts.length > 0
+                ? Math.round(sumMetlife / metlifeContracts.length)
                 : 0;
             const avgNonlife = nonlifeContracts.length > 0
-                ? Math.round(nonlifeContracts.reduce((sum, c) => sum + c.monthlyPremium, 0) / nonlifeContracts.length)
+                ? Math.round(sumNonlife / nonlifeContracts.length)
                 : 0;
-            const avgTotal = contracts.length > 0
-                ? Math.round(contracts.reduce((sum, c) => sum + c.monthlyPremium, 0) / contracts.length)
-                : 0;
+            const avgTotal = sumTotal;
 
             // 총 보수
             const totalCommMetlife = metlifeContracts.reduce((sum, c) => sum + c.totalCommission, 0);
             const totalCommNonlife = nonlifeContracts.reduce((sum, c) => sum + c.totalCommission, 0);
 
-            // 선지급율
+            // 선지급금
             const advanceMetlife = metlifeContracts.reduce((sum, c) => sum + c.advancePayment, 0);
             const advanceNonlife = nonlifeContracts.reduce((sum, c) => sum + c.advancePayment, 0);
-
-            // 정산 금액 계산
-            let totalSettlement = 0;
-            contracts.forEach(contract => {
-                const result = calculateSettlement(contract);
-                if (selectedMethod === '1') totalSettlement += result.method1;
-                else if (selectedMethod === '2') totalSettlement += result.method2;
-                else if (selectedMethod === '3') totalSettlement += result.method3;
-            });
-
-            const settlementAmount = contracts.length > 0 
-                ? Math.round(totalSettlement / contracts.length)
-                : 0;
+            const totalAdvance = advanceMetlife + advanceNonlife;
 
             // DOM 업데이트
             document.getElementById('avgMetlife').textContent = formatNumber(avgMetlife) + ' 원';
@@ -1223,15 +1211,19 @@
             document.getElementById('totalCommNonlife').textContent = formatNumber(totalCommNonlife) + ' 원';
             document.getElementById('advanceMetlife').textContent = formatNumber(advanceMetlife) + ' 원';
             document.getElementById('advanceNonlife').textContent = formatNumber(advanceNonlife) + ' 원';
-            document.getElementById('settlementAmount').textContent = formatNumber(settlementAmount) + ' 원';
-            document.getElementById('totalCount').textContent = contracts.length + ' 건';
-            document.getElementById('grandTotal').textContent = formatNumber(totalSettlement) + ' 원';
+            document.getElementById('settlementAmount').textContent = formatNumber(totalAdvance) + ' 원';
+            document.getElementById('totalCount').value = contracts.length;
+            updateGrandTotal();
         }
 
-        // 정산 방안 변경 시 (하이라이트 업데이트 포함)
-        function onMethodChange() {
-            updateSummary();
-            renderContracts();
+        function updateGrandTotal() {
+            const settlementAmount = parseInt(document.getElementById('settlementAmount').textContent.replace(/[^0-9]/g, '')) || 0;
+            const totalCount = parseInt(document.getElementById('totalCount').value) || 0;
+            const contractCount = contracts.length || 1;
+            // 건당 평균을 구한 뒤 입력된 총 건수를 곱함
+            const perContract = Math.round(settlementAmount / contractCount);
+            const grandTotal = perContract * totalCount;
+            document.getElementById('grandTotal').textContent = formatNumber(grandTotal) + ' 원';
         }
 
         function resetAll() {
@@ -1316,27 +1308,31 @@
             contracts = [];
             contractIdCounter = 0;
 
-            // 사례 A: 57년생 여성
+            // 사례 A: 57년생 여성 (메트라이프)
             const idA = ++contractIdCounter;
-            contracts.push({
+            const contractA = {
                 id: idA,
                 label: '57년생_여성',
                 insuranceType: 'metlife',
                 monthlyPremium: 156428,
-                totalCommission: 549338,
-                advancePayment: 274694
-            });
+                totalCommission: 0,
+                advancePayment: 0
+            };
+            calculateCommissions(contractA);
+            contracts.push(contractA);
 
-            // 사례 B: 78년생 여성
+            // 사례 B: 78년생 여성 (메트라이프)
             const idB = ++contractIdCounter;
-            contracts.push({
+            const contractB = {
                 id: idB,
                 label: '78년생_여성',
                 insuranceType: 'metlife',
                 monthlyPremium: 122515,
-                totalCommission: 581293,
-                advancePayment: 290646
-            });
+                totalCommission: 0,
+                advancePayment: 0
+            };
+            calculateCommissions(contractB);
+            contracts.push(contractB);
 
             renderContracts();
             updateSummary();
