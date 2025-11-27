@@ -626,6 +626,91 @@
             background: #218838;
         }
 
+        /* 제안서 전체 화면 스타일 */
+        .proposal-fullscreen {
+            background: white;
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto 40px auto;
+        }
+
+        .proposal-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #1e3c72;
+            margin-bottom: 30px;
+        }
+
+        .proposal-header-bar h2 {
+            font-size: 1.8rem;
+            color: #1e3c72;
+            margin: 0;
+        }
+
+        .proposal-body {
+            line-height: 1.8;
+        }
+
+        .proposal-section {
+            margin-bottom: 40px;
+            page-break-inside: avoid;
+        }
+
+        .proposal-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .proposal-section h3 {
+            font-size: 1.3rem;
+            color: #1e3c72;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .proposal-section h4 {
+            font-size: 1.05rem;
+            color: #2a5298;
+            margin: 20px 0 12px 0;
+        }
+
+        .proposal-section p {
+            font-size: 1rem;
+            line-height: 1.8;
+            color: #444;
+            margin-bottom: 12px;
+        }
+
+        /* 프린트 최적화 */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .header,
+            .container,
+            .proposal-header-bar > div {
+                display: none !important;
+            }
+
+            .proposal-fullscreen {
+                padding: 20px;
+                max-width: 100%;
+            }
+
+            .proposal-section {
+                page-break-inside: avoid;
+            }
+
+            .example-table,
+            .example-grid {
+                page-break-inside: avoid;
+            }
+        }
+
         /* 반응형 */
         @media (max-width: 900px) {
             .container {
@@ -646,6 +731,25 @@
 
             .example-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .proposal-fullscreen {
+                padding: 20px;
+            }
+
+            .proposal-header-bar {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .proposal-header-bar > div {
+                width: 100%;
+            }
+
+            .proposal-header-bar .btn {
+                width: 100%;
+                margin-right: 0 !important;
             }
 
             .modal {
@@ -685,14 +789,235 @@
 <body>
     <div class="header">
         <h1>보험 중개 수수료 정산 시스템</h1>
-        <p>개별 건 입력 시 정산 방안별 지급액 자동 계산</p>
+        <p>월 보험료 입력 시 수수료 자동 계산</p>
         <div style="margin-top: 15px;">
-            <button type="button" class="btn btn-proposal" ontouchend="openProposalModal(); return false;" onclick="openProposalModal(); return false;" style="margin-right: 10px;">제안서 보기</button>
+            <button type="button" class="btn btn-proposal" ontouchend="toggleProposal(); return false;" onclick="toggleProposal(); return false;" style="margin-right: 10px;">제안서 보기</button>
             <button type="button" class="btn btn-demo" ontouchend="loadDemoData(); return false;" onclick="loadDemoData(); return false;">시뮬레이션 데이터 불러오기</button>
         </div>
     </div>
 
-    <div class="container">
+    <!-- 제안서 전체 화면 영역 -->
+    <div id="proposalSection" class="proposal-fullscreen" style="display: none;">
+        <div class="proposal-header-bar">
+            <h2>보험 중개 수수료 정산 제안서</h2>
+            <div>
+                <button type="button" class="btn btn-secondary" onclick="window.print()" style="margin-right: 10px;">인쇄</button>
+                <button type="button" class="btn btn-primary" onclick="toggleProposal()">닫기</button>
+            </div>
+        </div>
+
+        <div class="proposal-body">
+            <!-- 1. 개요 -->
+            <div class="proposal-section">
+                <h3>1. 제안 개요</h3>
+                <p>보험 중개를 통해 계약이 체결된 경우, 중개처에 수수료를 지급하기 위한 정산 체계를 제안합니다.
+                   고객의 연령, 병력, 성별, 납기 등에 따라 수수료 배수가 다양하게 적용되며,
+                   본 시스템은 이를 효율적으로 관리하고 정산할 수 있도록 설계되었습니다.</p>
+            </div>
+
+            <!-- 2. 수수료 산정 기준 -->
+            <div class="proposal-section">
+                <h3>2. 수수료 산정 기준</h3>
+                <div class="info-box">
+                    <p><strong>특약별 보험료 대비 수수료:</strong> 3.5배수 ~ 5.4배수</p>
+                    <p><strong>평균 적용 배수:</strong> 4배수</p>
+                </div>
+
+                <h4>보험 유형별 선지급률</h4>
+                <table class="example-table">
+                    <tr>
+                        <th>보험 유형</th>
+                        <th>선지급률</th>
+                    </tr>
+                    <tr>
+                        <td>메트라이프 수수료</td>
+                        <td>40% ~ 50%</td>
+                    </tr>
+                    <tr>
+                        <td>손해보험 수수료</td>
+                        <td>50% ~ 60%</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- 3. 정산 방안 -->
+            <div class="proposal-section">
+                <h3>3. 정산 방안 (3가지)</h3>
+                <p>다음 3가지 정산 방안 중 선택하여 적용할 수 있으며, 모든 방안은 수익 배분 5:5 구조가 가능합니다.</p>
+
+                <table class="example-table">
+                    <tr>
+                        <th>방안</th>
+                        <th>내용</th>
+                        <th>계산식</th>
+                    </tr>
+                    <tr>
+                        <td><strong>방안 1</strong></td>
+                        <td>선지급금 전액 지급</td>
+                        <td>선지급금 x 100%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>방안 2</strong></td>
+                        <td>총보수의 50% 지급</td>
+                        <td>총 수수료 x 50%</td>
+                    </tr>
+                    <tr>
+                        <td><strong>방안 3</strong></td>
+                        <td>보험료의 2배수 지급</td>
+                        <td>월 보험료 x 2</td>
+                    </tr>
+                </table>
+
+                <div class="tip-box">
+                    <h5>[참고]</h5>
+                    <p>- 정산 편의성 기준으로는 방안 3(보험료의 2배수)이 가장 쉽고 빠름</p>
+                    <p>- 손해보험 수수료는 선지급금 전액 지급(방안 1)이 가장 빠르고 쉬움</p>
+                </div>
+            </div>
+
+            <!-- 4. 정산 예시 -->
+            <div class="proposal-section">
+                <h3>4. 정산 예시 (월 10건 기준)</h3>
+                <table class="example-table">
+                    <tr>
+                        <th>구분</th>
+                        <th>항목</th>
+                        <th>금액</th>
+                    </tr>
+                    <tr class="sub-header">
+                        <td rowspan="3">월평균보험료</td>
+                        <td>메트라이프</td>
+                        <td>70,000 원</td>
+                    </tr>
+                    <tr>
+                        <td>손해보험</td>
+                        <td>30,000 원</td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td>합계</td>
+                        <td>100,000 원</td>
+                    </tr>
+                    <tr class="sub-header">
+                        <td rowspan="2">총 보수</td>
+                        <td>메트라이프</td>
+                        <td>280,000 원</td>
+                    </tr>
+                    <tr>
+                        <td>손해보험</td>
+                        <td>180,000 원</td>
+                    </tr>
+                    <tr class="sub-header">
+                        <td rowspan="2">선지급율</td>
+                        <td>메트라이프</td>
+                        <td>140,000 원</td>
+                    </tr>
+                    <tr>
+                        <td>손해보험</td>
+                        <td>72,000 원</td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td colspan="2">수익정산금액</td>
+                        <td>212,000 원</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">총 건수</td>
+                        <td>10 건</td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td colspan="2"><strong>정산 총액</strong></td>
+                        <td><strong>2,120,000 원</strong></td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- 5. 정산 사례 -->
+            <div class="proposal-section">
+                <h3>5. 정산 사례</h3>
+                <p>아래는 계약 건에 대한 정산 방안별 지급액 시뮬레이션 결과입니다.</p>
+
+                <div class="example-grid">
+                    <!-- 사례 A -->
+                    <div class="example-card">
+                        <h5>사례 A: 57년생 여성</h5>
+                        <div class="data-row">
+                            <span class="label">월 보험료</span>
+                            <span class="value">156,428 원</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="label">총 수수료</span>
+                            <span class="value">549,338 원</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="label">선지급금</span>
+                            <span class="value">274,694 원</span>
+                        </div>
+                        <div class="method-comparison">
+                            <div class="method-row">
+                                <span>1. 선지급금 전액</span>
+                                <span class="value">274,694 원</span>
+                            </div>
+                            <div class="method-row">
+                                <span>2. 총보수의 50%</span>
+                                <span class="value">274,669 원</span>
+                            </div>
+                            <div class="method-row">
+                                <span>3. 보험료의 2배수</span>
+                                <span class="value">312,856 원</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 사례 B -->
+                    <div class="example-card">
+                        <h5>사례 B: 78년생 여성</h5>
+                        <div class="data-row">
+                            <span class="label">월 보험료</span>
+                            <span class="value">122,515 원</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="label">총 수수료</span>
+                            <span class="value">581,293 원</span>
+                        </div>
+                        <div class="data-row">
+                            <span class="label">선지급금</span>
+                            <span class="value">290,646 원</span>
+                        </div>
+                        <div class="method-comparison">
+                            <div class="method-row">
+                                <span>1. 선지급금 전액</span>
+                                <span class="value">290,646 원</span>
+                            </div>
+                            <div class="method-row">
+                                <span>2. 총보수의 50%</span>
+                                <span class="value">290,647 원</span>
+                            </div>
+                            <div class="method-row">
+                                <span>3. 보험료의 2배수</span>
+                                <span class="value">245,030 원</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. 활용 안내 -->
+            <div class="proposal-section">
+                <h3>6. 시스템 활용 안내</h3>
+                <p>본 시스템을 통해 다음과 같이 활용하실 수 있습니다.</p>
+                <div class="info-box">
+                    <p><strong>1단계:</strong> "건 추가" 버튼을 클릭하여 계약 건 정보를 입력합니다.</p>
+                    <p><strong>2단계:</strong> 월 보험료 입력 시 총 수수료와 선지급금이 자동 계산됩니다.</p>
+                    <p><strong>3단계:</strong> 좌측 요약 영역에서 전체 건수에 대한 집계를 확인합니다.</p>
+                    <p><strong>4단계:</strong> 총 건수를 입력하여 최종 정산 총액을 확인합니다.</p>
+                </div>
+                <p style="margin-top: 15px; text-align: center;">
+                    <button type="button" class="btn btn-demo" ontouchend="loadDemoData(); toggleProposal(); return false;" onclick="loadDemoData(); toggleProposal(); return false;">시뮬레이션 데이터로 직접 체험하기</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" id="mainContainer">
         <!-- 좌측: 정산 요약 -->
         <div class="summary-section">
             <div class="summary-card">
@@ -769,10 +1094,10 @@
             </div>
         </div>
 
-        <!-- 우측: 실제 데이터 -->
+        <!-- 우측: 데이터 입력 -->
         <div class="data-section">
             <div class="data-header">
-                <h2>실제 데이터</h2>
+                <h2>정산 건 목록</h2>
                 <div class="btn-group">
                     <button type="button" class="btn btn-primary" ontouchend="addContract(); return false;" onclick="addContract(); return false;">건 추가</button>
                     <button type="button" class="btn btn-secondary" ontouchend="resetAll(); return false;" onclick="resetAll(); return false;">초기화</button>
@@ -783,225 +1108,6 @@
                 <div class="empty-state">
                     <p>등록된 정산 건이 없습니다.</p>
                     <button type="button" class="btn btn-primary" ontouchend="addContract(); return false;" onclick="addContract(); return false;">첫 번째 건 추가하기</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 제안서 모달 -->
-    <div class="modal-overlay" id="proposalModal">
-        <div class="modal">
-            <div class="modal-header">
-                <h2>보험 중개 수수료 정산 제안서</h2>
-                <button type="button" class="modal-close" ontouchend="closeProposalModal(); return false;" onclick="closeProposalModal(); return false;">X</button>
-            </div>
-            <div class="modal-body">
-                <!-- 1. 개요 -->
-                <div class="modal-section">
-                    <h3>1. 제안 개요</h3>
-                    <p>보험 중개를 통해 계약이 체결된 경우, 중개처에 수수료를 지급하기 위한 정산 체계를 제안합니다. 
-                       고객의 연령, 병력, 성별, 납기 등에 따라 수수료 배수가 다양하게 적용되며, 
-                       본 시스템은 이를 효율적으로 관리하고 정산할 수 있도록 설계되었습니다.</p>
-                </div>
-
-                <!-- 2. 수수료 산정 기준 -->
-                <div class="modal-section">
-                    <h3>2. 수수료 산정 기준</h3>
-                    <div class="info-box">
-                        <p><strong>특약별 보험료 대비 수수료:</strong> 3.5배수 ~ 5.4배수</p>
-                        <p><strong>평균 적용 배수:</strong> 4배수</p>
-                    </div>
-                    
-                    <h4>보험 유형별 선지급률</h4>
-                    <table class="example-table">
-                        <tr>
-                            <th>보험 유형</th>
-                            <th>선지급률</th>
-                        </tr>
-                        <tr>
-                            <td>메트라이프 수수료</td>
-                            <td>40% ~ 50%</td>
-                        </tr>
-                        <tr>
-                            <td>손해보험 수수료</td>
-                            <td>50% ~ 60%</td>
-                        </tr>
-                    </table>
-                </div>
-
-                <!-- 3. 정산 방안 -->
-                <div class="modal-section">
-                    <h3>3. 정산 방안 (3가지)</h3>
-                    <p>다음 3가지 정산 방안 중 선택하여 적용할 수 있으며, 모든 방안은 수익 배분 5:5 구조가 가능합니다.</p>
-                    
-                    <table class="example-table">
-                        <tr>
-                            <th>방안</th>
-                            <th>내용</th>
-                            <th>계산식</th>
-                        </tr>
-                        <tr>
-                            <td><strong>방안 1</strong></td>
-                            <td>선지급금 전액 지급</td>
-                            <td>선지급금 x 100%</td>
-                        </tr>
-                        <tr>
-                            <td><strong>방안 2</strong></td>
-                            <td>총보수의 50% 지급</td>
-                            <td>총 수수료 x 50%</td>
-                        </tr>
-                        <tr>
-                            <td><strong>방안 3</strong></td>
-                            <td>보험료의 2배수 지급</td>
-                            <td>월 보험료 x 2</td>
-                        </tr>
-                    </table>
-
-                    <div class="tip-box">
-                        <h5>[참고]</h5>
-                        <p>- 정산 편의성 기준으로는 방안 3(보험료의 2배수)이 가장 쉽고 빠름</p>
-                        <p>- 손해보험 수수료는 선지급금 전액 지급(방안 1)이 가장 빠르고 쉬움</p>
-                    </div>
-                </div>
-
-                <!-- 4. 정산 예시 -->
-                <div class="modal-section">
-                    <h3>4. 정산 예시 (월 10건 기준)</h3>
-                    <table class="example-table">
-                        <tr>
-                            <th>구분</th>
-                            <th>항목</th>
-                            <th>금액</th>
-                        </tr>
-                        <tr class="sub-header">
-                            <td rowspan="3">월평균보험료</td>
-                            <td>메트라이프</td>
-                            <td>70,000 원</td>
-                        </tr>
-                        <tr>
-                            <td>손해보험</td>
-                            <td>30,000 원</td>
-                        </tr>
-                        <tr class="highlight-row">
-                            <td>합계</td>
-                            <td>100,000 원</td>
-                        </tr>
-                        <tr class="sub-header">
-                            <td rowspan="2">총 보수</td>
-                            <td>메트라이프</td>
-                            <td>280,000 원</td>
-                        </tr>
-                        <tr>
-                            <td>손해보험</td>
-                            <td>180,000 원</td>
-                        </tr>
-                        <tr class="sub-header">
-                            <td rowspan="2">선지급율</td>
-                            <td>메트라이프</td>
-                            <td>140,000 원</td>
-                        </tr>
-                        <tr>
-                            <td>손해보험</td>
-                            <td>72,000 원</td>
-                        </tr>
-                        <tr class="highlight-row">
-                            <td colspan="2">수익정산금액</td>
-                            <td>212,000 원</td>
-                        </tr>
-                        <tr>
-                            <td colspan="2">총 건수</td>
-                            <td>10 건</td>
-                        </tr>
-                        <tr class="highlight-row">
-                            <td colspan="2"><strong>정산 총액</strong></td>
-                            <td><strong>2,120,000 원</strong></td>
-                        </tr>
-                    </table>
-                </div>
-
-                <!-- 5. 실제 데이터 사례 -->
-                <div class="modal-section">
-                    <h3>5. 실제 데이터 사례</h3>
-                    <p>아래는 실제 계약 건에 대한 정산 방안별 지급액 시뮬레이션 결과입니다.</p>
-                    
-                    <div class="example-grid">
-                        <!-- 사례 A -->
-                        <div class="example-card">
-                            <h5>사례 A: 57년생 여성</h5>
-                            <div class="data-row">
-                                <span class="label">월 보험료</span>
-                                <span class="value">156,428 원</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="label">총 수수료</span>
-                                <span class="value">549,338 원</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="label">선지급금</span>
-                                <span class="value">274,694 원</span>
-                            </div>
-                            <div class="method-comparison">
-                                <div class="method-row">
-                                    <span>1. 선지급금 전액</span>
-                                    <span class="value">274,694 원</span>
-                                </div>
-                                <div class="method-row">
-                                    <span>2. 총보수의 50%</span>
-                                    <span class="value">274,669 원</span>
-                                </div>
-                                <div class="method-row">
-                                    <span>3. 보험료의 2배수</span>
-                                    <span class="value">312,856 원</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 사례 B -->
-                        <div class="example-card">
-                            <h5>사례 B: 78년생 여성</h5>
-                            <div class="data-row">
-                                <span class="label">월 보험료</span>
-                                <span class="value">122,515 원</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="label">총 수수료</span>
-                                <span class="value">581,293 원</span>
-                            </div>
-                            <div class="data-row">
-                                <span class="label">선지급금</span>
-                                <span class="value">290,646 원</span>
-                            </div>
-                            <div class="method-comparison">
-                                <div class="method-row">
-                                    <span>1. 선지급금 전액</span>
-                                    <span class="value">290,646 원</span>
-                                </div>
-                                <div class="method-row">
-                                    <span>2. 총보수의 50%</span>
-                                    <span class="value">290,647 원</span>
-                                </div>
-                                <div class="method-row">
-                                    <span>3. 보험료의 2배수</span>
-                                    <span class="value">245,030 원</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 6. 활용 안내 -->
-                <div class="modal-section">
-                    <h3>6. 시스템 활용 안내</h3>
-                    <p>본 시스템을 통해 다음과 같이 활용하실 수 있습니다.</p>
-                    <div class="info-box">
-                        <p><strong>1단계:</strong> "건 추가" 버튼을 클릭하여 개별 계약 건 정보를 입력합니다.</p>
-                        <p><strong>2단계:</strong> 입력 즉시 3가지 정산 방안별 지급액이 자동 계산됩니다.</p>
-                        <p><strong>3단계:</strong> 좌측 요약 영역에서 전체 건수에 대한 집계를 확인합니다.</p>
-                        <p><strong>4단계:</strong> 기본 정산 방안을 선택하여 최종 정산 총액을 확인합니다.</p>
-                    </div>
-                    <p style="margin-top: 15px; text-align: center;">
-                        <button type="button" class="btn btn-demo" ontouchend="loadDemoData(); closeProposalModal(); return false;" onclick="loadDemoData(); closeProposalModal(); return false;">시뮬레이션 데이터로 직접 체험하기</button>
-                    </p>
                 </div>
             </div>
         </div>
@@ -1242,28 +1348,30 @@
         // 초기화
         updateSummary();
 
-        // 모달 관련 함수
-        function openProposalModal() {
-            document.getElementById('proposalModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
+        // 제안서 토글 함수
+        function toggleProposal() {
+            const proposalSection = document.getElementById('proposalSection');
+            const mainContainer = document.getElementById('mainContainer');
+
+            if (proposalSection.style.display === 'none') {
+                // 제안서 표시
+                proposalSection.style.display = 'block';
+                mainContainer.style.display = 'none';
+                window.scrollTo(0, 0);
+            } else {
+                // 제안서 숨김
+                proposalSection.style.display = 'none';
+                mainContainer.style.display = 'flex';
+            }
         }
 
-        function closeProposalModal() {
-            document.getElementById('proposalModal').classList.remove('active');
-            document.body.style.overflow = '';
-        }
-
-        // ESC 키로 모달 닫기
+        // ESC 키로 제안서 닫기
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
-                closeProposalModal();
-            }
-        });
-
-        // 모달 바깥 클릭시 닫기
-        document.getElementById('proposalModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeProposalModal();
+                const proposalSection = document.getElementById('proposalSection');
+                if (proposalSection.style.display !== 'none') {
+                    toggleProposal();
+                }
             }
         });
 
