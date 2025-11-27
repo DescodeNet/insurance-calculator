@@ -818,9 +818,16 @@
             <!-- 2. 수수료 산정 기준 -->
             <div class="proposal-section">
                 <h3>2. 수수료 산정 기준</h3>
+
+                <h4>메트라이프</h4>
                 <div class="info-box">
-                    <p><strong>특약별 보험료 대비 수수료:</strong> 3.5배수 ~ 5.4배수</p>
+                    <p><strong>특약별 보험료 대비 수수료:</strong> 3배수 ~ 5배수</p>
                     <p><strong>평균 적용 배수:</strong> 4배수</p>
+                </div>
+
+                <h4>손해보험</h4>
+                <div class="info-box">
+                    <p><strong>손해보험 평균:</strong> 10배수</p>
                 </div>
 
                 <h4>보험 유형별 선지급률</h4>
@@ -831,11 +838,14 @@
                     </tr>
                     <tr>
                         <td>메트라이프 수수료</td>
-                        <td>40% ~ 50%</td>
+                        <td>35% ~ 50%</td>
                     </tr>
                     <tr>
                         <td>손해보험 수수료</td>
-                        <td>50% ~ 60%</td>
+                        <td>20% ~ 60%</td>
+                    </tr>
+                    <tr class="highlight-row">
+                        <td colspan="2"><strong>→ 통합 50%로 계산</strong></td>
                     </tr>
                 </table>
             </div>
@@ -870,8 +880,8 @@
 
                 <div class="tip-box">
                     <h5>[참고]</h5>
-                    <p>- 정산 편의성 기준으로는 방안 3(보험료의 2배수)이 가장 쉽고 빠름</p>
-                    <p>- 손해보험 수수료는 선지급금 전액 지급(방안 1)이 가장 빠르고 쉬움</p>
+                    <p>- <strong>메트라이프:</strong> 정산 편의성 기준으로 방안 3(보험료의 2배수)이 가장 쉽고 빠름</p>
+                    <p>- <strong>손해보험:</strong> 실비, 화재보험 등은 수수료율이 많이 낮아 총 보수의 50% 지급(방안 2)으로 계산</p>
                 </div>
             </div>
 
@@ -1087,7 +1097,7 @@
                     <h4>&lt;참고&gt;</h4>
                     <p style="margin-top: 8px;"><strong>1. 총 보수 계산식</strong></p>
                     <p>메트라이프 = 보험료의 4배수</p>
-                    <p>손해보험 = 보험료의 6배수</p>
+                    <p>손해보험 = 보험료의 10배수</p>
                     <p style="margin-top: 8px;"><strong>2. 익월 선지급 수수료 계산식</strong></p>
                     <p>생보,손보 각 총 보수의 50%</p>
                 </div>
@@ -1185,9 +1195,9 @@
                     contract[field] = value;
                 } else if (field === 'insuranceType') {
                     contract[field] = value;
-                    // 보험 유형 변경 시 재계산
+                    // 보험 유형 변경 시 재계산 및 화면 전체 갱신
                     calculateCommissions(contract);
-                    updateAutoCalcDisplay(id, contract);
+                    renderContracts();
                 } else if (field === 'monthlyPremium') {
                     contract[field] = parseNumber(value);
                     // 월 보험료 입력 시 자동 계산
@@ -1207,8 +1217,8 @@
                 contract.totalCommission = monthlyPremium * 4;
                 contract.advancePayment = Math.round(contract.totalCommission * 0.5);
             } else {
-                // 손해보험: 총 수수료 = 월 보험료 * 6, 선지급률 50%
-                contract.totalCommission = monthlyPremium * 6;
+                // 손해보험: 총 수수료 = 월 보험료 * 10, 선지급률 50%
+                contract.totalCommission = monthlyPremium * 10;
                 contract.advancePayment = Math.round(contract.totalCommission * 0.5);
             }
         }
@@ -1269,10 +1279,16 @@
                                     <div class="form-group">
                                         <label style="color: #888;">총 수수료 (자동계산)</label>
                                         <div id="total-comm-${contract.id}" style="padding: 10px 12px; background: #f5f5f5; border-radius: 6px; font-weight: 600; color: #2a5298;">${formatNumber(contract.totalCommission)} 원</div>
+                                        <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">
+                                            ${contract.insuranceType === 'metlife' ? '보험료 × 4배수' : '보험료 × 10배수'}
+                                        </div>
                                     </div>
                                     <div class="form-group">
                                         <label style="color: #888;">선지급금 (자동계산)</label>
                                         <div id="advance-pay-${contract.id}" style="padding: 10px 12px; background: #f5f5f5; border-radius: 6px; font-weight: 600; color: #2a5298;">${formatNumber(contract.advancePayment)} 원</div>
+                                        <div style="font-size: 0.75rem; color: #888; margin-top: 4px;">
+                                            총 수수료 × 50%
+                                        </div>
                                     </div>
                                 </div>
                             </div>
